@@ -1,0 +1,313 @@
+{
+  "schemaVersion": "1.0.0",
+  "imports": [
+    "js/aw-button.directive",
+    "js/aw-command-panel.directive",
+    "js/aw-i18n.directive",
+    "js/aw-list.directive",
+    "js/aw-listbox.directive",
+    "js/aw-panel-body.directive",
+    "js/aw-panel-footer.directive",
+    "js/aw-panel-section.directive",
+    "js/aw-radiobutton.directive",
+    "js/aw-textbox.directive",
+    "js/enable-when.directive"
+  ],
+  "actions": {
+
+    "createPackCompAction": {
+      "actionType": "JSFunction",
+      "method": "createPackAction",
+
+      "inputData": {
+        "data": "{{data}}",
+        "ctx": "{{ctx}}",
+        "conditions": "{{conditions}}"
+      },
+
+      "deps": "js/CreatePackCompView"
+    },
+    "consumerunitTypeJSAction": {
+      "actionType": "JSFunction",
+      "method": "consumerunitTypeUpdate",
+
+      "inputData": {
+        "data": "{{data}}",
+        "ctx": "{{ctx}}"
+      },
+
+      "deps": "js/CreatePackCompView"
+    },
+    "reveal": {
+      "actionType": "JSFunction",
+      "method": "loadCompClassLov",
+      "inputData": {
+        "data": "{{data}}"
+      },
+      "outputData": {},
+
+      "deps": "js/CreatePackCompView"
+    },
+
+    "compClassJSAction": {
+      "actionType": "JSFunction",
+      "method": "onCompClassSelected",
+      "inputData": {
+        "data": "{{data}}"
+      },
+      "outputData": {
+        "compCommodityLOVValues": [],
+        "compClassShapLOVValues": [],
+        "compClassWeightVolLOVValues": [],
+        "compClassMfgProcLOVValues": []
+      },
+
+      "deps": "js/CreatePackCompView"
+    },
+    "compCommodityJSAction": {
+      "actionType": "JSFunction",
+      "method": "onCompCommoditySelected",
+      "inputData": {
+        "data": "{{data}}"
+      },
+      "outputData": {},
+
+      "deps": "js/CreatePackCompView"
+    },
+    "matClassJSAction": {
+      "actionType": "JSFunction",
+      "method": "onmatClassSelected",
+      "inputData": {
+        "data": "{{data}}"
+      },
+      "outputData": {},
+
+      "deps": "js/CreatePackCompView"
+    },
+    "matCommodityJSAction": {
+      "actionType": "JSFunction",
+      "method": "onmatCommoditySelected",
+      "inputData": {
+        "data": "{{data}}"
+      },
+      "outputData": {},
+
+      "deps": "js/CreatePackCompView"
+    },
+    "deliFormJSAction": {
+      "actionType": "JSFunction",
+      "method": "ondeliFormSelected",
+      "inputData": {
+        "data": "{{data}}"
+      },
+      "outputData": {},
+
+      "deps": "js/CreatePackCompView"
+    },
+    "pamFrameTypeJSAction": {
+      "actionType": "JSFunction",
+      "method": "onpamFrameTypeSelected",
+      "inputData": {
+        "data": "{{data}}"
+      },
+      "outputData": {},
+
+      "deps": "js/CreatePackCompView"
+    }
+  },
+  "data": {
+    "object": {
+      "displayName": "Selected Object",
+      "type": "",
+      "isRequired": "false",
+      "dispValue": "{{ctx.selected.props.object_name.dbValue}}",
+      "dbValue": "{{ctx.selected.props.object_name.dbValue}}"
+    },
+    "compClass": {
+      "displayName": "Component Class",
+      "type": "STRING",
+      "isRequired": "true",
+      "hasLov": true,
+      "dbValue": "",
+      "dispValue": ""
+
+    },
+    "preferences": ["U4_GMCPackComponentType", "UL_primary_packaging_list"],
+    "compCommodity": {
+      "displayName": "Component Commodity",
+      "type": "STRING",
+      "isRequired": "true",
+      "hasLov": true,
+      "dbValue": "",
+      "dispValue": ""
+    },
+    "matClass": {
+      "displayName": "Material Class",
+      "type": "STRING",
+      "isRequired": "true",
+      "hasLov": true,
+      "dbValue": "",
+      "dispValue": ""
+    },
+    "matCommodity": {
+      "displayName": "Material Commodity",
+      "type": "STRING",
+      "isRequired": "true",
+      "hasLov": true,
+      "dbValue": "",
+      "dispValue": ""
+
+    },
+    "deliForm": {
+      "displayName": "Delivered Form",
+      "type": "STRING",
+      "isRequired": "true",
+      "hasLov": true,
+      "dbValue": "",
+      "dispValue": ""
+
+    },
+    "pamFrameType": {
+      "displayName": "PAM Frame Type",
+      "type": "STRING",
+      "isRequired": "true",
+      "hasLov": true,
+      "dbValue": "",
+      "dispValue": ""
+
+    },
+    "technology": {
+      "displayName": "Technology",
+      "type": "STRING",
+      "isRequired": "true",
+      "hasLov": true,
+      "dbValue": "",
+      "dispValue": ""
+
+    },
+    "shape": {
+      "displayName": "Shape / Feature",
+      "type": "STRING",
+      "isRequired": "true",
+      "hasLov": true,
+      "dbValue": "",
+      "dispValue": ""
+
+    },
+    "cuWeightVolume": {
+      "displayName": "CU Declared Weight/Volume",
+      "type": "STRING",
+      "isRequired": "true",
+      "hasLov": true,
+      "dbValue": "",
+      "dispValue": ""
+
+    },
+    "manufacProcessess": {
+      "displayName": "Manufacturing Processes",
+      "type": "STRING",
+      "isRequired": "true",
+      "hasLov": true,
+      "dbValue": "",
+      "dispValue": ""
+
+    },
+    "size": {
+      "displayName": "Size",
+      "type": "STRING",
+      "isRequired": "false",
+      "maxLength": 11,
+      "dbValue": ""
+
+    },
+    "uniqDescriptor": {
+      "displayName": "Unique Descriptor",
+      "type": "STRING",
+      "isRequired": "false",
+      "maxLength": 8,
+      "dbValue": ""
+
+    },
+    "objDesc": {
+      "displayName": "Description",
+      "type": "STRING",
+      "isRequired": "false",
+      "maxLength": 240,
+      "dbValue": ""
+
+    },
+    "leadSize": {
+      "displayName": "Lead Size",
+      "type": "BOOLEAN",
+      "isRequired": "false",
+      "isEditable": "true",
+      "dbValue": false,
+      "dispValue": "xxxbutton1xxx",
+      "labelPosition": "PROPERTY_LABEL_AT_SIDE"
+    },
+    "consumerUnit": {
+      "displayName": "Consumer Unit",
+      "type": "BOOLEAN",
+      "isRequired": "true",
+      "isEditable": "true",
+      "dbValue": "{{undefined}}",
+      "dispValue": "xxxbutton1xxx",
+      "labelPosition": "PROPERTY_LABEL_AT_SIDE"
+    },
+    "itemInfo": {
+      "displayName": "Item Information",
+      "type": "STRING",
+      "isRequired": "false",
+      "isEditable": "false"
+
+    },
+    "techSubTech": {
+      "displayName": "Technology Sub Technology",
+      "type": "STRING",
+      "isRequired": "false",
+      "isEditable": "false"
+    },
+    "desCond": [{
+      "reset": [{
+        "propDisplayValue": "",
+        "propDisplayDescription": "",
+        "propInternalValue": ""
+      }]
+
+    }],
+    "componentType": {
+      "displayName": "Component Type",
+      "type": "STRING",
+      "isRequired": "true",
+      "hasLov": true,
+      "dbValue": "",
+      "dispValue": ""
+    },
+    "compTypeLOV":[   
+          {"propDisplayValue": "New Component - Unique","propDisplayDescription": "","propInternalValue": "New Component - Unique"},
+          {"propDisplayValue": "New Component - Stock","propDisplayDescription": "","propInternalValue": "New Component - Stock"}
+    ]
+  },
+  "i18n": {
+    "CreatePackCompTitle": ["UnileverCoreModuleMessages"],
+    "Create": ["UnileverCoreModuleMessages"],
+    "createCompSuccessMsg": ["UnileverCoreModuleMessages"],
+    "ItemInfo": ["UnileverCoreModuleMessages"],
+    "TechSubTech": ["UnileverCoreModuleMessages"]
+  },
+  "messages": {
+    "createCompSuccessMsg": {
+      "messageType": "INFO",
+      "messageText": "{{i18n.createCompSuccessMsg}}",
+      "messageTextParams": ["{{data.newCreatedItem}}"]
+    }
+  },
+  "conditions": {
+    "CreateButtonVisibility": {
+      "expression": "(data.compClass.dbValue && data.compClass.dbValue.trim()!='') && (data.compCommodity.dbValue && data.compCommodity.dbValue.trim()!='') && (data.matClass.dbValue && data.matClass.dbValue.trim()!='') && (data.matCommodity.dbValue && data.matCommodity.dbValue.trim()!='') && (data.cuWeightVolume.dbValue && data.cuWeightVolume.dbValue.trim()!='') && (data.manufacProcessess.dbValue && data.manufacProcessess.dbValue.trim()!='') && (data.shape.dbValue && data.shape.dbValue.trim()!='') && (data.deliForm.dbValue && data.deliForm.dbValue.trim()!='') && (data.pamFrameType.dbValue && data.pamFrameType.dbValue.trim()!='') && (data.technology.dbValue && data.technology.dbValue.trim()!='')"
+    },
+    "CreateButtonEnability": {
+      "expression": "true"
+    }
+  }
+}

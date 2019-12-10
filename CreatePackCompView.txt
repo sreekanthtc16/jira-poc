@@ -1,0 +1,781 @@
+define(['app',
+    'lodash',
+    'js/logService',
+    'soa/kernel/soaService',
+    'js/eventBus',
+    'js/UnileverCommonUtil',
+    'js/appCtxService',
+    'js/messagingService'
+], function (app, _, logService, soaService, eventBus) {
+    'use strict';
+
+    var exports = {},
+        _soaSvc = null,
+        _appCtxSvc = null,
+        _messagingSvc = null,
+        _commonUtil = null;
+
+    var technology_description = null;
+    var requiredText = 'Required';
+    var noLOVtext = 'Select a value for the property ';
+
+    /**
+     *   
+     * checks whether current user has privilege for selected project.
+     * Selected Project should be in projects of current user to allow to create pack component.
+     * 
+     * 
+     * @param {Object} data ViewModel object from module.json
+     *  
+     */
+    exports.checkUserPrivilege = function (data) {
+        data.privileged = undefined;
+        data.projectsAssigned = undefined;
+        data.projectName = _appCtxSvc.ctx.selected.props.object_string.dbValues[0];
+        data.projectsAssigned = _appCtxSvc.ctx.selected.props.project_list.dbValues[0];
+        data.modifiablePack = undefined;
+
+        if (_appCtxSvc.ctx.selected.props.is_modifiable.uiValues[0] === 'False') {
+            data.modifiablePack = false;
+            data.privileged = false;
+        }
+        // query response has projects of current user
+        var projectList__ = data.executeProjectQueryResponse[0].projectsInfo;
+        //  _commonUtil.logOnConsole('length ' + projectList__.length);
+        for (var i in projectList__) {
+            if (_appCtxSvc.ctx.selected.props.object_string.dbValues[0] === (
+                    'Project ' + (projectList__[i].project.props.object_string.dbValues[0]))) {
+                // set user has privilege
+                data.privileged = true;
+                _commonUtil.logOnConsole('User has Privilege to create component on this Project.');
+                break;
+            }
+        }
+
+    };
+
+    /**
+     *   
+     * Loads Component Class LOV.
+     * Called on Click of Create Component command
+     * 
+     * @param {Object} data ViewModel object
+     * @return 
+     */
+    exports.loadCompClassLov = function (data) {
+
+
+        //set required text to required properties. Because, required text was missing even if property is set required in viewmodel.
+        data.compClass.propertyRequiredText = requiredText;
+        data.compCommodity.propertyRequiredText = requiredText;
+        data.matClass.propertyRequiredText = requiredText;
+        data.matCommodity.propertyRequiredText = requiredText;
+        data.shape.propertyRequiredText = requiredText;
+        data.cuWeightVolume.propertyRequiredText = requiredText;
+        data.manufacProcessess.propertyRequiredText = requiredText;
+        data.deliForm.propertyRequiredText = requiredText;
+        data.pamFrameType.propertyRequiredText = requiredText;
+        data.technology.propertyRequiredText = requiredText;
+
+
+
+
+        var inputData = {
+            lovName: 'U4_ComponentClassLOV'
+        };
+        _soaSvc.post('AWC-2016-10-Create', 'getLovNSubLov', inputData).then(function (response) {
+            if (response) {
+                data.compClassLOVValues = exports.convertDataToLov(response.lovpair); // set new lov
+                data.compClass.dbValue = data.compClassLOVValues[0]; // set to empty
+                _commonUtil.logOnConsole('Component Class loaded.');
+            }
+        });
+
+        return;
+    };
+
+    /**
+     *   
+     * Loads 'Component Commodity', 'Shape / Feature', 'CU Declared Weight/Volume', 'Manufacturing Processes' LOV.
+     * 
+     * Called on selection of 'Component Class'
+     * 
+     * @param {Object} data ViewModel object
+     * @return 
+     */
+    exports.onCompClassSelected = function (data) {
+
+        var currentCompClass = data.compClass.dbValue;
+
+        if (currentCompClass && currentCompClass.length > 0) {
+
+            var lovName1 = exports.getLOVValueIn(currentCompClass, data.compClassLOVValues);
+
+            if (lovName1) {
+                //get comp commodity lov
+                var inputData = {
+                    lovName: lovName1
+                };
+                _soaSvc.post('AWC-2016-10-Create', 'getLovNSubLov', inputData).then(function (response) {
+                    if (response) {
+                        data.compCommodityLOVValues = exports.convertDataToLov(response.lovpair); // set new lov
+                        data.compCommodity.dbValue = data.compCommodityLOVValues[0]; // set to empty
+                        _commonUtil.logOnConsole('Component Commodity updated.');
+                    }
+                });
+            }
+            //get shape lov
+            var inputData = {
+                selectedValue: currentCompClass,
+                softLinkLov: 'U4_CompClassShapeLOV'
+            };
+            _soaSvc.post('AWC-2016-10-Create', 'getVIDLSubLovNLov', inputData).then(function (response) {
+                if (response) {
+                    data.shapeLOVValues = exports.convertDataToLov(response.lovpair); // set new lov
+                    data.shape.dbValue = data.shapeLOVValues[0]; // set to empty
+                    _commonUtil.logOnConsole('Shape / Feature updated.');
+                }
+            });
+
+            //get weight vol lov
+            var inputData = {
+                selectedValue: currentCompClass,
+                softLinkLov: 'U4_CompClassWVLOV'
+            };
+            _soaSvc.post('AWC-2016-10-Create', 'getVIDLSubLovNLov', inputData).then(function (response) {
+                if (response) {
+                    data.cuWeightVolumeLOVValues = exports.convertDataToLov(response.lovpair); // set new lov
+                    data.cuWeightVolume.dbValue = data.cuWeightVolumeLOVValues[0]; // set to empty
+                    _commonUtil.logOnConsole('CU Declared Weight/Volume updated.');
+                }
+            });
+
+            //get mfg process lov
+            var inputData = {
+                selectedValue: currentCompClass,
+                softLinkLov: 'U4_CompClassMfgProcessLOV'
+            };
+            _soaSvc.post('AWC-2016-10-Create', 'getVIDLSubLovNLov', inputData).then(function (response) {
+                if (response) {
+                    data.manufacProcessessLOVValues = exports.convertDataToLov(response.lovpair); // set new lov
+                    data.manufacProcessess.dbValue = data.manufacProcessessLOVValues[0]; // set to empty
+                    _commonUtil.logOnConsole('Manufacturing Processes updated.');
+                }
+            });
+
+
+        } else {
+
+            var compclassStr = '\"Component Class\".';
+
+            //set respective empty lov text
+            data.compCommodity.lovNoValsText = noLOVtext + compclassStr;
+            data.matClass.lovNoValsText = noLOVtext + compclassStr;
+            data.matCommodity.lovNoValsText = noLOVtext + compclassStr;
+            data.cuWeightVolume.lovNoValsText = noLOVtext + compclassStr;
+            data.manufacProcessess.lovNoValsText = noLOVtext + compclassStr;
+            data.shape.lovNoValsText = noLOVtext + compclassStr;
+            data.deliForm.lovNoValsText = noLOVtext + compclassStr;
+            data.pamFrameType.lovNoValsText = noLOVtext + compclassStr;
+            data.technology.lovNoValsText = noLOVtext + compclassStr;
+
+            // reset dependent properties
+            exports.resetLov(data, 'compCommodity');
+            exports.resetLov(data, 'shape');
+            exports.resetLov(data, 'cuWeightVolume');
+            exports.resetLov(data, 'manufacProcessess');
+
+        }
+
+        // reset dependent properties
+        exports.resetLov(data, 'matClass');
+        exports.resetLov(data, 'matCommodity');
+        exports.resetLov(data, 'deliForm');
+        exports.resetLov(data, 'pamFrameType');
+        exports.resetLov(data, 'technology');
+        return;
+    };
+
+    /**
+     *   
+     * Loads 'Material Class' LOV.
+     * 
+     * Called on selection of 'Component Commodity'
+     * 
+     * @param {Object} data ViewModel object
+     * @return 
+     */
+    exports.onCompCommoditySelected = function (data) {
+
+        var currentCompCommodity = data.compCommodity.dbValue;
+        if (currentCompCommodity && currentCompCommodity.length > 0) {
+
+            var lovName1 = exports.getLOVValueIn(currentCompCommodity, data.compCommodityLOVValues);
+
+            if (lovName1) {
+
+                var inputData = {
+                    lovName: lovName1
+                };
+                _soaSvc.post('AWC-2016-10-Create', 'getLovNSubLov', inputData).then(function (response) {
+                    if (response) {
+                        data.matClassLOVValues = exports.convertDataToLov(response.lovpair); // set new lov
+                        data.matClass.dbValue = data.matClassLOVValues[0]; // set to empty
+                        _commonUtil.logOnConsole('Material Class updated.');
+                    }
+
+                });
+            }
+
+        } else {
+
+            var compCommStr = '\"Component Commodity\".';
+
+            exports.resetLov(data, 'matClass');
+
+
+            data.matClass.lovNoValsText = noLOVtext + compCommStr;
+            data.matCommodity.lovNoValsText = noLOVtext + compCommStr;
+            data.deliForm.lovNoValsText = noLOVtext + compCommStr;
+            data.pamFrameType.lovNoValsText = noLOVtext + compCommStr;
+            data.technology.lovNoValsText = noLOVtext + compCommStr;
+
+
+        }
+        exports.resetLov(data, 'matCommodity');
+        exports.resetLov(data, 'deliForm');
+        exports.resetLov(data, 'pamFrameType');
+        exports.resetLov(data, 'technology');
+        return;
+    };
+
+    /**
+     *   
+     * Loads 'Material Commodity' LOV.
+     * 
+     * Called on selection of 'Material Class'
+     * 
+     * @param {Object} data ViewModel object
+     * @return 
+     */
+    exports.onmatClassSelected = function (data) {
+
+        var currentmatClass = data.matClass.dbValue;
+        if (currentmatClass && currentmatClass.length > 0) {
+
+            var lovName1 = exports.getLOVValueIn(currentmatClass, data.matClassLOVValues);
+
+            if (lovName1) {
+
+                var inputData = {
+                    lovName: lovName1
+                };
+                _soaSvc.post('AWC-2016-10-Create', 'getLovNSubLov', inputData).then(function (response) {
+                    if (response) {
+                        data.matCommodityLOVValues = exports.convertDataToLov(response.lovpair); // set new lov
+                        data.matCommodity.dbValue = data.matCommodityLOVValues[0]; // set to empty
+                        _commonUtil.logOnConsole('Material Commodity updated.');
+                    }
+                });
+            }
+
+        } else {
+
+            var matClassStr = '\"Material Class\".';
+
+            exports.resetLov(data, 'matCommodity');
+
+            data.matCommodity.lovNoValsText = noLOVtext + matClassStr;
+            data.deliForm.lovNoValsText = noLOVtext + matClassStr;
+            data.pamFrameType.lovNoValsText = noLOVtext + matClassStr;
+            data.technology.lovNoValsText = noLOVtext + matClassStr;
+
+
+
+        }
+
+        exports.resetLov(data, 'deliForm');
+        exports.resetLov(data, 'pamFrameType');
+        exports.resetLov(data, 'technology');
+        return;
+    };
+
+    /**
+     *   
+     * Loads 'Delivered Form' LOV.
+     * 
+     * Called on selection of 'Material Commodity'
+     * 
+     * @param {Object} data ViewModel object
+     * @return 
+     */
+    exports.onmatCommoditySelected = function (data) {
+
+        var currentmatCommodity = data.matCommodity.dbValue;
+        if (currentmatCommodity && currentmatCommodity.length > 0) {
+
+            var lovName1 = exports.getLOVValueIn(currentmatCommodity, data.matCommodityLOVValues);
+
+            if (lovName1) {
+
+                var inputData = {
+                    lovName: lovName1
+                };
+                _soaSvc.post('AWC-2016-10-Create', 'getLovNSubLov', inputData).then(function (response) {
+                    if (response) {
+                        data.deliFormLOVValues = exports.convertDataToLov(response.lovpair); // set new lov
+                        data.deliForm.dbValue = data.deliFormLOVValues[0]; // set to empty
+                        _commonUtil.logOnConsole('Delivered Form updated.');
+                    }
+                });
+            }
+        } else {
+
+            var matCommStr = '\"Material Commodity\".';
+
+            exports.resetLov(data, 'deliForm');
+
+            data.deliForm.lovNoValsText = noLOVtext + matCommStr;
+            data.pamFrameType.lovNoValsText = noLOVtext + matCommStr;
+            data.technology.lovNoValsText = noLOVtext + matCommStr;
+
+        }
+
+        exports.resetLov(data, 'pamFrameType');
+        exports.resetLov(data, 'technology');
+        return;
+    };
+
+    /**
+     *   
+     * Loads 'PAM Frame Type' LOV.
+     * 
+     * Called on selection of 'Delivered Form'
+     * 
+     * @param {Object} data ViewModel object
+     * @return 
+     */
+    exports.ondeliFormSelected = function (data) {
+
+        var currentdeliForm = data.deliForm.dbValue;
+        if (currentdeliForm && currentdeliForm.length > 0 && currentdeliForm != ' ') {
+
+            var lovName1 = exports.getLOVValueIn(currentdeliForm, data.deliFormLOVValues);
+
+            if (lovName1) {
+
+                var inputData = {
+                    lovName: lovName1
+                };
+                _soaSvc.post('AWC-2016-10-Create', 'getLovNSubLov', inputData).then(function (response) {
+                    if (response) {
+                        data.pamFrameTypeLOVValues = exports.convertDataToLov(response.lovpair); // set new lov
+                        data.pamFrameType.dbValue = data.pamFrameTypeLOVValues[0]; // set to empty
+                        _commonUtil.logOnConsole('PAM Frame Type updated.');
+                    }
+                });
+            }
+
+        } else {
+
+            var delFormStr = '\"Delivered Form\".';
+
+            exports.resetLov(data, 'pamFrameType');
+
+            data.pamFrameType.lovNoValsText = noLOVtext + delFormStr;
+            data.technology.lovNoValsText = noLOVtext + delFormStr;
+
+        }
+        exports.resetLov(data, 'technology');
+        return;
+    };
+
+    /**
+     *   
+     * Loads 'Technology' LOV.
+     * 
+     * Called on selection of 'PAM Frame Type'
+     * 
+     * @param {Object} data ViewModel object
+     * @return 
+     */
+    exports.onpamFrameTypeSelected = function (data) {
+
+        var currentpamFrameType = data.pamFrameType.dbValue;
+        if (currentpamFrameType && currentpamFrameType.length > 0) {
+
+            var lovName1 = exports.getLOVValueIn(currentpamFrameType, data.pamFrameTypeLOVValues);
+
+            if (lovName1) {
+
+                var inputData = {
+                    lovName: lovName1
+                };
+                _soaSvc.post('AWC-2016-10-Create', 'getLovNSubLov', inputData).then(function (response) {
+                    if (response) {
+                        data.technologyLOVValues = exports.convertDataToLov(response.lovpair); // set new lov
+                        data.technology.dbValue = data.technologyLOVValues[0]; // set to empty
+                        _commonUtil.logOnConsole('Technology updated.');
+                    }
+                });
+            }
+        } else {
+
+            var pamframeStr = '\"PAM Frame Type\".';
+
+            exports.resetLov(data, 'technology');
+
+            data.technology.lovNoValsText = noLOVtext + pamframeStr;
+        }
+        return;
+    };
+
+    /**
+     * 
+     * Called on selection of 'Technology'
+     * 
+     * set consumerUnit based on 'Technology' and 'PAM Frame Type'
+     * 
+     * @param {Object} data  ViewModel object
+     * @param {Object} ctx ctx Object
+     * 
+     * @return
+     */
+    exports.consumerunitTypeUpdate = function (data, ctx) {
+        var prefValue = [];
+        var prefValue2 = [];
+        var story = [];
+        var frame = data.pamFrameType.dbValue;
+        var technoValue = data.technology.dbValue;
+
+        if (technoValue && technoValue.length > 0) {
+
+            var prefName1 = 'U4_GMCPackComponentType';
+            var prefName2 = 'UL_primary_packaging_list';
+
+            prefValue = ctx.preferences[prefName1];
+            prefValue2 = ctx.preferences[prefName2];
+
+            if (_commonUtil.isPreferencesAvailable([prefName1, prefName2], true)) {
+
+                for (var i = 0; i < prefValue.length; i++) {
+                    story = prefValue[i].split('#');
+
+                    if ((story.length == 3) && (story[0] == frame) && (story[1] == technoValue)) {
+                        //   _commonUtil.logOnConsole('found the respective technovalue');
+                        var techFromPref = story[2];
+                    }
+                }
+                let found = false;
+                for (var j = 0; j < prefValue2.length; j++) {
+                    if (prefValue2[j] == techFromPref) {
+                        found = true;
+                        break;
+                    }
+
+                }
+
+                data.consumerUnit.dbValue = found;
+
+
+            }
+        }
+
+        showTechnologyInfo(technoValue);
+
+        return;
+    }
+
+    /**
+     *   
+     * converts LOV string values into objects 
+     * 
+     * @param {Object} lovPair LOV name and Dependent LOV realname pair
+     * @return {Array} array lov objects
+     */
+    exports.convertDataToLov = function (lovPair) {
+
+
+        var lov = [];
+        lov.push({
+            propDisplayValue: '',
+            propDisplayDescription: '',
+            propInternalValue: '',
+            propDep: ''
+        });
+        for (var i in lovPair) {
+            // sub LOV will be stored in 'propDep' property
+            var val__ = lovPair[i].lovvalue;
+            var subLov__ = lovPair[i].lovname;
+            lov.push({
+                propDisplayValue: val__,
+                propDisplayDescription: '',
+                propInternalValue: val__,
+                propDep: subLov__
+            });
+
+        }
+
+        return lov;
+    };
+
+    /**
+     *   
+     * Resets property and respective LOV to empty.
+     * 
+     * @param {Object} data ViewModel object
+     * @param {String} propString property to reset
+     * 
+     * @return
+     */
+    exports.resetLov = function (data, propString) {
+
+
+        data[(propString + 'LOVValues')] = [''];
+        data[propString].dbValue = '';
+        data[propString].displayValues = undefined;
+        data[propString].uiValue = undefined;
+        data[(propString + 'LOVValues')] = [];
+
+        return;
+    };
+
+    /**
+     *   
+     * Finds selected LOV's dependent LOV
+     * 
+     * @param {String} selected selected LOV value
+     * @param {Array} lovArray LOV array
+     * 
+     * @return {String} Dependent LOV
+     */
+    exports.getLOVValueIn = function (selected, lovArray) {
+
+        for (var i in lovArray) {
+
+            if (lovArray[i].propDisplayValue === selected) {
+                //   _commonUtil.logOnConsole('Value matched >> ' + lovArray[i].propDep);
+                return lovArray[i].propDep;
+            }
+        }
+        //   _commonUtil.logOnConsole('Match not found');
+        return;
+    };
+
+
+    /**
+     *   
+     * Shows information about selected technology as notification based on preference
+     * 
+     * @param {String} technoValue selected technology
+     * 
+     *
+     */
+    var showTechnologyInfo = function (technoValue) {
+
+        if (technoValue) {
+            var techDescPref = 'U4_TechnologyDescription';
+            if (technology_description == undefined && _commonUtil.isPreferencesAvailable([techDescPref], true)) {
+                technology_description = {};
+                var technology_description_values = _appCtxSvc.ctx.preferences[techDescPref];
+                if (technology_description_values) {
+                    for (var inx = 0; inx < technology_description_values.length; inx++) {
+                        var str = technology_description_values[inx].trim().split('#');
+                        if (str.length == 2)
+                            technology_description[str[0]] = str[1];
+                    }
+                }
+
+            }
+            if (technology_description && technology_description[technoValue] != undefined) {
+                var desc_value = technology_description[technoValue];
+                if (desc_value)
+                    _messagingSvc.showError(desc_value);
+            }
+
+        }
+
+    }
+
+    /**
+     *   
+     * Check selected commodity is present in a preference
+     * 
+     * @param {String} commodity selected commodity
+     * @param {Array} prefValue preference value
+     *
+     */
+    var updateFormPropertyValue = function (commodity, prefValue) {
+
+        if (prefValue) {
+            for (var i = 0; i < prefValue.length; i++) {
+
+                if (prefValue[i]) {
+
+                    var val = prefValue[i].trim().split('#');
+
+                    if (val.length == 2)
+                        if (commodity.toUpperCase() === val[0].toUpperCase())
+                            return val[1];
+                }
+            }
+        }
+        return '';
+    }
+
+    /**
+     *   
+     * Check selected frame and technology is present in a preference
+     * 
+     * @param {String} frame selected frame
+     * @param {String} tech selected technology
+     * @param {Array} prefValue preference value
+     * @return value from preference after evaluation with technology and frame value
+     *
+     */
+    var getDesignComponentType = function (frame, tech, prefValue) {
+
+        for (var i = 0; i < prefValue.length; i++) {
+            var str = prefValue[i].trim().split('#');
+
+            if (str && str.length == 3 && (str[0].toUpperCase() === frame.toUpperCase()) && (str[1].toUpperCase() === tech.toUpperCase()))
+                return str[2];
+        }
+
+        return undefined;
+    }
+
+    /**
+     *   
+     * Validates properties selected with preference values
+     * 
+     * @param {Object} data ViewModel object
+     * @param {Object} ctx ctx Object
+     * @return true allows to proceed pack component creation
+     *
+     */
+    var createPackPreCheck = function (data, ctx) {
+
+        var compAbbPref = 'U4_GMC_Component_Abbreviation';
+        var compMatPref = 'U4_GMC_Material_Abbreviation';
+        var packCompTypePref = 'U4_GMCPackComponentType';
+
+        if (_commonUtil.isPreferencesAvailable([compAbbPref, compMatPref, packCompTypePref], true)) {
+
+            var cDesc = updateFormPropertyValue(data.compCommodity.dbValue, ctx.preferences[compAbbPref]);
+            var mDesc = updateFormPropertyValue(data.matCommodity.dbValue, ctx.preferences[compMatPref]);
+
+            if (cDesc && mDesc && cDesc.length != 0 && mDesc.length != 0) {
+
+                var frame = data.pamFrameType.dbValue;
+                var tech = data.technology.dbValue;
+
+                var compType = getDesignComponentType(frame, tech, ctx.preferences[packCompTypePref]);
+
+                if (compType && compType.length >= 1) {
+                    return true;
+                } else {
+                    var str = '\nFor selected Pam Frame Type ( ' + frame + ' ) & Technology ( ' + tech + ' )';
+                    _messagingSvc.showError('Pack Component Type Missing in Preference.' + str);
+                    return false;
+                }
+
+            } else {
+                if (mDesc.length == 0)
+                    _messagingSvc.showError('Material Description Value is Missing in Preference <U4_GMC_Material_Abbreviation>.');
+                else
+                    _messagingSvc.showError('Component Description Value is Missing in Preference <U4_GMC_Component_Abbreviation>.');
+
+                return false;
+            }
+
+        } else {
+            return false;
+        }
+
+
+    }
+
+    /**
+     *   
+     * Creates new Pack component with selected properties using custom SOA
+     * 
+     * @param {Object} data ViewModel object
+     * @param {Object} ctx ctx Object
+     * @param {Object} conditions condition Object
+     * 
+     *
+     */
+    exports.createPackAction = function (data, ctx, conditions) {
+
+        try {
+            if (createPackPreCheck(data, ctx)) {
+
+                //   Disables create button once it is clicked. Not allowing user to click again.
+                conditions.CreateButtonEnability = false;
+
+                var inputData = {
+                    'selectedObj': {
+                        'uid': ctx.selected.uid,
+                        'type': ctx.selected.type
+                    },
+                    'leadSize': data.leadSize.dbValue,
+                    'packProps': {
+                        'packProps': {
+                            'u4_component_class': data.compClass.dbValue,
+                            'u4_component_class_shape': data.compClass.dbValue,
+                            'u4_component_class_mfgpro': data.compClass.dbValue,
+                            'u4_component_class_wv': data.compClass.dbValue,
+                            'u4_component_commodity': data.compCommodity.dbValue,
+                            'u4_material_class': data.matClass.dbValue,
+                            'u4_material_commodity': data.matCommodity.dbValue,
+                            'u4_cu_weight_volume': data.cuWeightVolume.dbValue,
+                            'u4_manufacturing_processes': data.manufacProcessess.dbValue,
+                            'u4_shape': data.shape.dbValue,
+                            'u4_delivered_form': data.deliForm.dbValue,
+                            'u4_pam_frame_type': data.pamFrameType.dbValue,
+                            'u4_technology': data.technology.dbValue,
+                            'u4_size': data.size.dbValue,
+                            'u4_unique_descriptor': data.uniqDescriptor.dbValue,
+                            'object_desc': data.objDesc.dbValue,
+                            'u4_consumer_unit': data.consumerUnit.dbValue.toString(),
+                            'u4_component_type': data.componentType.dbValue
+                        }
+                    }
+                };
+
+                _commonUtil.logOnConsole('\nProperties of new pack component item : ' + JSON.stringify(inputData.packProps.packProps));
+                _soaSvc.post('AWC-2016-10-Create', 'createPackComp', inputData).then(function (response) {
+
+                    try {
+
+                        data.newCreatedItem = response.modelObjects[response.created[0]].props.object_string.dbValues[0];
+                        _commonUtil.closeTNIpanel();
+
+                        _messagingSvc.reportNotyMessage(data, data._internal.messages, 'createCompSuccessMsg');
+
+                        var objs = _commonUtil.getSelectedObjsToRefresh(ctx);
+                        _commonUtil.refreshObjectsInUI(objs);
+
+                    } catch (error) {
+                        _messagingSvc.showError('create Pack Component failed.');
+                    }
+
+                });
+            }
+        } catch (error) {
+            _messagingSvc.showError('Something went wrong in pack component create action.');
+            conditions.CreateButtonEnability = true;
+        }
+    }
+
+
+    app.factory('CreatePackCompView', [ 'soa_kernel_soaService', 'appCtxService', 'messagingService', 'UnileverCommonUtil', function ( soaSvc, appCtxSvc, messagingSvc, commonUtil) {
+        return _soaSvc = soaSvc, _appCtxSvc = appCtxSvc, _messagingSvc = messagingSvc, _commonUtil = commonUtil, exports
+    }]);
+
+    return {
+        moduleServiceNameToInject: 'CreatePackCompView'
+    };
+
+});

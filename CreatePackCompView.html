@@ -1,0 +1,33 @@
+<aw-command-panel caption="i18n.CreatePackCompTitle">
+    <aw-panel-body>
+        <aw-panel-section caption="i18n.ItemInfo">
+            <aw-listbox prop="data.compClass" list="data.compClassLOVValues" action="compClassJSAction"></aw-listbox>
+            <aw-listbox prop="data.compCommodity" list="data.compCommodityLOVValues" action="compCommodityJSAction"></aw-listbox>
+            <aw-listbox prop="data.matClass" list="data.matClassLOVValues" action="matClassJSAction"></aw-listbox>
+            <aw-listbox prop="data.matCommodity" list="data.matCommodityLOVValues" action="matCommodityJSAction"></aw-listbox>
+            <aw-radiobutton prop="data.leadSize"></aw-radiobutton>
+            <aw-break></aw-break>
+            <aw-textbox prop="data.objDesc"></aw-textbox>
+        </aw-panel-section>
+        <aw-panel-section caption="i18n.TechSubTech">
+            <aw-listbox prop="data.cuWeightVolume" list="data.cuWeightVolumeLOVValues"></aw-listbox>
+            <aw-listbox prop="data.manufacProcessess" list="data.manufacProcessessLOVValues"></aw-listbox>
+            <aw-listbox prop="data.shape" list="data.shapeLOVValues"></aw-listbox>
+            <aw-listbox prop="data.deliForm" list="data.deliFormLOVValues" action="deliFormJSAction"></aw-listbox>
+            <aw-listbox prop="data.pamFrameType" list="data.pamFrameTypeLOVValues" action="pamFrameTypeJSAction"></aw-listbox>
+            <aw-listbox prop="data.technology" list="data.technologyLOVValues" action="consumerunitTypeJSAction"></aw-listbox>
+            <aw-radiobutton prop="data.consumerUnit"></aw-radiobutton>
+            <aw-break></aw-break>
+            <aw-textbox prop="data.size"></aw-textbox>
+            <aw-textbox prop="data.uniqDescriptor"></aw-textbox>
+			<aw-listbox prop="data.componentType" list="data.compTypeLOV"></aw-listbox>
+        </aw-panel-section>
+    </aw-panel-body>
+    <aw-panel-footer>
+        <aw-panel-section>
+            <aw-button action="createPackCompAction" visible-when="conditions.CreateButtonVisibility" enable-when="conditions.CreateButtonEnability">
+                <aw-i18n>i18n.Create</aw-i18n>
+            </aw-button>
+        </aw-panel-section>
+    </aw-panel-footer>
+</aw-command-panel>
